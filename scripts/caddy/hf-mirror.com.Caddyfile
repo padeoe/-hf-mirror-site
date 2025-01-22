@@ -1,9 +1,7 @@
 # TLS证书设置。单独使用本文件需取消注释并正确设置。
 # 以下是基于cloudflare的证书设置：
 (tls_hf_com) {
-	tls {
-		dns cloudflare {$CF_TOKEN}
-	}
+	tls {$HOME}/Downloads/hf.6scloud.com/fullchain.pem {$HOME}/Downloads/hf.6scloud.com/privkey.pem
 }
 *.{$MIRROR_HOST} {
 	import tls_hf_com
@@ -24,7 +22,7 @@
 	@asset-paths {
 		expression path('/api/event', '/front/*', '/avatars/*') || path_regexp('\\.(js|css|png|jpe?g|gif|ico|woff|otf|ttf|eot|svg|txt|pdf|docx?|xlsx?)$')
 	}
-	skip_log @asset-paths
+	log_skip @asset-paths
 	encode {
 		zstd
 		gzip
@@ -57,11 +55,11 @@
 	# 部分内部统计接口直接返回固定数据，减少服务器压力
 	handle /api/event {
 		respond "OK"
-		skip_log
+		log_skip
 	}
 	handle /cdn-cgi/rum {
 		respond 204
-		skip_log
+		log_skip
 	}
 
 	# 模型链接避免缓存
@@ -113,8 +111,8 @@
 		reverse_proxy https://huggingface.co {
 			header_up Accept-Encoding identity
 			header_up Host {upstream_hostport}
-			header_down Location cdn-lfs\.huggingface\.co cdn-lfs.{$MIRROR_HOST}
-			header_down Location cdn-lfs-us-1\.huggingface\.co cdn-lfs-us-1.{$MIRROR_HOST}
+			header_down Location cdn-lfs\.(huggingface|hf)\.co cdn-lfs.{$MIRROR_HOST}
+			header_down Location cdn-lfs-us-1\.(huggingface|hf)\.co cdn-lfs-us-1.{$MIRROR_HOST}
 			header_down Location huggingface\.co {$MIRROR_HOST}
 		}
 	}
@@ -127,21 +125,21 @@
 		uri path_regexp /ws/datasets--(.+)--(.+)/(.+)$ /datasets/$1/resolve/$2/$3
 		reverse_proxy https://huggingface.co {
 			header_up Host {upstream_hostport}
-			header_down Location cdn-lfs\.huggingface\.co cdn-lfs.{$MIRROR_HOST}
-			header_down Location cdn-lfs-us-1\.huggingface\.co cdn-lfs-us-1.{$MIRROR_HOST}
+			header_down Location cdn-lfs\.(huggingface|hf)\.co cdn-lfs.{$MIRROR_HOST}
+			header_down Location cdn-lfs-us-1\.(huggingface|hf)\.co cdn-lfs-us-1.{$MIRROR_HOST}
 			header_down Location huggingface\.co {$MIRROR_HOST}
 		}
 	}
 
 	handle /* {
-		# skip_log
+		# log_skip
 		reverse_proxy https://huggingface.co {
 			# header_up Accept-Encoding identity
 			header_up Host {upstream_hostport}
 			header_up X-Api-Key {$API_KEY}
-			header_down Location cdn-lfs\.huggingface.co cdn-lfs.{$MIRROR_HOST}
-			header_down Location cdn-lfs-us-1\.huggingface.co cdn-lfs-us-1.{$MIRROR_HOST}
-			header_down Location huggingface\.co {$MIRROR_HOST}
+			header_down Location cdn-lfs\.(huggingface|hf).co cdn-lfs.{$MIRROR_HOST}
+			header_down Location cdn-lfs-us-1\.(huggingface|hf).co cdn-lfs-us-1.{$MIRROR_HOST}
+			header_down Location (huggingface|hf)\.co {$MIRROR_HOST}
 		}
 	}
 }
